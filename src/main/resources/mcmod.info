@@ -1,0 +1,16 @@
+[
+  {
+    "modid": "discordwhitelist",
+    "name": "Discord Whitelist",
+    "description": "",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": [
+      ""
+    ],
+    "credits": "",
+    "logoFile": ""
+  }
+]

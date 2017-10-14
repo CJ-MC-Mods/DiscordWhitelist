@@ -1,0 +1,148 @@
+buildscript {
+    repositories {
+        jcenter()
+        mavenLocal()
+        maven {
+            url = "http://files.minecraftforge.net/maven"
+        }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'
+    }
+}
+
+
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'net.minecraftforge.gradle.forge'
+//Only edit below this line, the above code adds and enables the nessasary things for Forge to be setup.
+apply plugin: 'maven'
+apply plugin: 'idea'
+
+
+idea{
+    module{
+        inheritOutputDirs = false
+        outputDir = compileJava.destinationDir
+        testOutputDir = compileTestJava.destinationDir
+    }
+}
+
+ext.configFile = file "build.properties"
+
+repositories {
+    jcenter()
+    maven {
+        url "https://jitpack.io"
+    }
+}
+
+configFile.withReader {
+    // Load config.  It shall from now be referenced as simply config or project.config
+    def prop = new Properties()
+    prop.load(it)
+    project.ext.config = new ConfigSlurper().parse prop
+}
+
+version = "${config.mcversion}-${config.mod_version}"
+group= "com.cjm721.discordwhitelist" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+archivesBaseName = "Discord Whitelist"
+
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
+
+minecraft {
+    version = "1.12.1-14.22.0.2452"
+    runDir = "run"
+    // the mappings can be changed at any time, and must be in the following format.
+    // snapshot_YYYYMMDD   snapshot are built nightly.
+    // stable_#            stables are built at the discretion of the MCP team.
+    // Use non-default mappings at your own risk. they may not allways work.
+    // simply re-run your setup task after changing the mappings to update your workspace.
+    mappings = "snapshot_20170812"
+    replace '${mod_version}', project.config.mod_version
+    replaceIn "DiscordWhitelist.java"
+    serverRunArgs = ["nogui"]
+    // makeObfSourceJar = false // an Srg named sources jar is made by default. uncomment this to disable.
+}
+
+dependencies {
+    // you may put jars on which you depend on in ./libs
+    // or you may define them like so..
+    //compile "some.group:artifact:version:classifier"
+    //compile "some.group:artifact:version"
+
+    // real examples
+    //compile 'com.mod-buildcraft:buildcraft:6.0.8:dev'  // adds buildcraft to the dev env
+    //compile 'com.googlecode.efficient-java-matrix-library:ejml:0.24' // adds ejml to the dev env
+
+    // the 'provided' configuration is for optional dependencies that exist at compile-time but might not at runtime.
+    //provided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
+
+    // the deobf configurations:  'deobfCompile' and 'deobfProvided' are the same as the normal compile and provided,
+    // except that these dependencies get remapped to your current MCP mappings
+    //deobfCompile 'com.mod-buildcraft:buildcraft:6.0.8:dev'
+    //deobfProvided 'com.mod-buildcraft:buildcraft:6.0.8:dev'
+
+    // for more info...
+    // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
+    // http://www.gradle.org/docs/current/userguide/dependency_management.html
+
+//    provided files('run/mods/CoFHCore-1.10.2-4.1.0.155-universal.jar')
+    // deobfCompile "com.github.mcjty:compatlayer:1.11.2-0.2.5"
+//    compile "codechicken:CodeChickenLib:${project.config.mcversion}-${project.config.CCLIB_version}:universal"
+    compile("com.github.austinv11:Discord4J:2.9.1")
+}
+
+processResources
+{
+    // this will ensure that this task is redone when the versions change.
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include 'mcmod.info'
+
+        // replace version and mcversion
+        expand 'version':project.version, 'mcversion':project.minecraft.version
+    }
+
+    // copy everything else, thats not the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude 'mcmod.info'
+    }
+}
+
+reobf {
+    shadowJar {
+        mappingType = 'SEARGE'
+    }
+}
+
+shadowJar {
+    relocate 'commonsio', 'com.cjm721.commonsio'
+    relocate 'commonscodec', 'com.cjm721.commonscodec'
+    relocate 'commonslogging', 'com.cjm721.commonslogging'
+    relocate 'com.github.austinv11', 'com.cjm721.com.github.austinv11'
+    relocate 'com.googlecode.soundlibs', 'com.cjm721.com.googlecode.soundlibs'
+    relocate 'com.fasterxml.jackson', 'com.cjm721.com.fasterxml.jackson'
+    relocate 'com.vdurmont', 'com.cjm721.com.vdurmont'
+    relocate 'com.koloboke', 'com.cjm721.com.koloboke'
+    relocate 'junit', 'com.cjm721.junit'
+    relocate 'jflac', 'com.cjm721.jflac'
+    relocate 'net.jodah', 'com.cjm721.net.jodah'
+    relocate 'net.java.dev.jna', 'com.cjm721.net.java.dev.jna'
+    relocate 'org.apache.http', 'com.cjm721.org.apache.http'
+    relocate 'org.apache.commons', 'com.cjm721.org.apache.commons'
+    relocate 'org.eclipse.jetty', 'com.cjm721.org.eclipse.jetty'
+    relocate 'org.jcraft', 'com.cjm721.org.jcraft'
+    relocate 'org.tritonus', 'com.cjm721.org.tritonus'
+    relocate 'org.json', 'com.cjm721.org.json'
+
+    configurations = [project.configurations.compile]
+}
+
+artifacts {
+    archives shadowJar
+}
